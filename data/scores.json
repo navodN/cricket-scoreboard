@@ -1,0 +1,46 @@
+{
+  "current_match": 1,
+  "innings": {
+    "1": {
+      "batting_team": 1,
+      "bowling_team": 2,
+      "scores": [
+        {
+          "player_id": 101,
+          "position": 1,
+          "runs": 45,
+          "balls_faced": 30,
+          "fours": 5,
+          "sixes": 2,
+          "is_out": true,
+          "dismissal_type": "caught",
+          "dismissal_status": "c David Johnson b Michael Clark",
+          "bowled_by": 202,
+          "caught_by": 201
+        }
+        // More batting scores
+      ],
+      "bowling": [
+        {
+          "player_id": 201,
+          "bowling_order": 1,
+          "overs": 4.2,
+          "maidens": 1,
+          "runs_conceded": 28,
+          "wickets": 2,
+          "wides": 3,
+          "no_balls": 1,
+          "dots": 12
+        }
+        // More bowling figures
+      ],
+      "extras": 12,
+      "total_runs": 187,
+      "total_wickets": 6,
+      "total_balls": 120
+    },
+    "2": {
+      // Second innings data if available
+    }
+  }
+}
