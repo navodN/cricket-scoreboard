@@ -1,0 +1,11 @@
+{
+  "current_match": {
+    "match_id": 1,
+    "home_team_id": 1,
+    "away_team_id": 2,
+    "match_date": "2025-05-09 10:00:00",
+    "venue": "Pallekele International Cricket Stadium",
+    "toss_winner_id": 1,
+    "toss_decision": "bat"
+  }
+}
