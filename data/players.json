@@ -1,0 +1,24 @@
+{
+  "1": [
+    {
+      "player_id": 101,
+      "first_name": "John",
+      "last_name": "Smith",
+      "role": "Batsman",
+      "batting_style": "Right-handed",
+      "bowling_style": "Right-arm medium"
+    }
+    // More players for team 1
+  ],
+  "2": [
+    {
+      "player_id": 201,
+      "first_name": "David",
+      "last_name": "Johnson",
+      "role": "Bowler",
+      "batting_style": "Left-handed",
+      "bowling_style": "Left-arm spin"
+    }
+    // More players for team 2
+  ]
+}
