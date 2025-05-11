@@ -1,0 +1,14 @@
+[
+  {
+    "team_id": 1,
+    "team_name": "St. Sylvester's College",
+    "short_name": "SSCK",
+    "logo": "st_sylvester's.png"
+  },
+  {
+    "team_id": 2,
+    "team_name": "Vidyartha College",
+    "short_name": "VCK",
+    "logo": "vidyartha.png"
+  }
+]
