@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Scoreboard Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-section {
+            margin-bottom: 30px;
+        }
+        .login-container {
+            max-width: 500px;
+            margin: 50px auto;
+        }
+        .hidden {
+            display: none;
+        }
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
+    <div id="loginSection" class="login-container">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3>Admin Login</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="githubToken" class="form-label">GitHub Personal Access Token</label>
+                    <input type="password" class="form-control" id="githubToken" placeholder="Enter your GitHub token">
+                    <div class="form-text">
+                        Create a token with "repo" scope at 
+                        <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings</a>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="repoName" class="form-label">Repository Name</label>
+                    <input type="text" class="form-control" id="repoName" placeholder="username/repo">
+                </div>
+                <button id="loginBtn" class="btn btn-primary">Login</button>
+                <div id="loginStatus" class="status-message hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard (hidden until login) -->
+    <div id="adminDashboard" class="hidden">
+        <h1 class="mb-4">Cricket Scoreboard Admin</h1>
+        
+        <!-- Match Status Section -->
+        <div class="card form-section">
+            <div class="card-header bg-primary text-white">
+                <h3>Match Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Current Innings</label>
+                    <select id="currentInnings" class="form-select">
+                        <option value="1">1st Innings</option>
+                        <option value="2">2nd Innings</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Match Status</label>
+                    <select id="matchStatus" class="form-select">
+                        <option value="not_started">Not Started</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <button id="updateMatchStatusBtn" class="btn btn-primary">Update Status</button>
+                <div id="matchStatusMessage" class="status-message hidden"></div>
+            </div>
+        </div>
+
+        <!-- Batting Scores Section -->
+        <div class="card form-section">
+            <div class="card-header bg-primary text-white">
+                <h3>Batting Scores</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Select Team</label>
+                    <select id="battingTeam" class="form-select">
+                        <option value="1">St. Sylvester's College</option>
+                        <option value="2">Vidyartha College</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Select Player</label>
+                    <select id="battingPlayer" class="form-select">
+                        <!-- Players will be loaded dynamically -->
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <label class="form-label">Runs</label>
+                        <input type="number" id="runs" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Balls</label>
+                        <input type="number" id="balls" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">4s</label>
+                        <input type="number" id="fours" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">6s</label>
+                        <input type="number" id="sixes" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Position</label>
+                        <input type="number" id="position" class="form-control" min="1" max="11" value="1">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Dismissal Status</label>
+                        <select id="isOut" class="form-select">
+                            <option value="false">Not Out</option>
+                            <option value="true">Out</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="dismissalTypeContainer">
+                        <label class="form-label">Dismissal Type</label>
+                        <select id="dismissalType" class="form-select">
+                            <option value="bowled">Bowled</option>
+                            <option value="caught">Caught</option>
+                            <option value="lbw">LBW</option>
+                            <option value="run_out">Run Out</option>
+                            <option value="stumped">Stumped</option>
+                            <option value="hit_wicket">Hit Wicket</option>
+                            <option value="retired_hurt">Retired Hurt</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="bowledByContainer">
+                        <label class="form-label">Bowled By</label>
+                        <select id="bowledBy" class="form-select">
+                            <!-- Opponent bowlers will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="col-md-3" id="caughtByContainer">
+                        <label class="form-label">Caught By</label>
+                        <select id="caughtBy" class="form-select">
+                            <!-- Opponent fielders will be loaded dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <button id="updateBattingBtn" class="btn btn-primary mt-3">Update Batting Score</button>
+                <div id="battingStatusMessage" class="status-message hidden"></div>
+            </div>
+        </div>
+
+        <!-- Bowling Figures Section -->
+        <div class="card form-section">
+            <div class="card-header bg-primary text-white">
+                <h3>Bowling Figures</h3>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Select Team</label>
+                    <select id="bowlingTeam" class="form-select">
+                        <option value="1">St. Sylvester's College</option>
+                        <option value="2">Vidyartha College</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Select Bowler</label>
+                    <select id="bowler" class="form-select">
+                        <!-- Bowlers will be loaded dynamically -->
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <label class="form-label">Overs</label>
+                        <input type="number" id="overs" class="form-control" min="0" step="0.1" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Maidens</label>
+                        <input type="number" id="maidens" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Runs</label>
+                        <input type="number" id="runsConceded" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Wickets</label>
+                        <input type="number" id="wickets" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Wides</label>
+                        <input type="number" id="wides" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">No Balls</label>
+                        <input type="number" id="noBalls" class="form-control" min="0" value="0">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Dot Balls</label>
+                        <input type="number" id="dots" class="form-control" min="0" value="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Bowling Order</label>
+                        <input type="number" id="bowlingOrder" class="form-control" min="1" max="11" value="1">
+                    </div>
+                </div>
+                <button id="updateBowlingBtn" class="btn btn-primary mt-3">Update Bowling Figures</button>
+                <div id="bowlingStatusMessage" class="status-message hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let githubToken = '';
+        let repoName = '';
+        let playersData = {};
+        let scoresData = {};
+        let matchesData = {};
+        let teamsData = {};
+
+        // DOM elements
+        const loginSection = document.getElementById('loginSection');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginStatus = document.getElementById('loginStatus');
+        const battingTeamSelect = document.getElementById('battingTeam');
+        const battingPlayerSelect = document.getElementById('battingPlayer');
+        const bowlingTeamSelect = document.getElementById('bowlingTeam');
+        const bowlerSelect = document.getElementById('bowler');
+        const bowledBySelect = document.getElementById('bowledBy');
+        const caughtBySelect = document.getElementById('caughtBy');
+        const isOutSelect = document.getElementById('isOut');
+        const dismissalTypeContainer = document.getElementById('dismissalTypeContainer');
+        const bowledByContainer = document.getElementById('bowledByContainer');
+        const caughtByContainer = document.getElementById('caughtByContainer');
+
+        // Initialize the admin interface
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up event listeners
+            loginBtn.addEventListener('click', handleLogin);
+            battingTeamSelect.addEventListener('change', loadBattingPlayers);
+            bowlingTeamSelect.addEventListener('change', loadBowlers);
+            isOutSelect.addEventListener('change', toggleDismissalFields);
+            document.getElementById('updateMatchStatusBtn').addEventListener('click', updateMatchStatus);
+            document.getElementById('updateBattingBtn').addEventListener('click', updateBattingScore);
+            document.getElementById('updateBowlingBtn').addEventListener('click', updateBowlingFigures);
+
+            // Initially hide dismissal fields
+            toggleDismissalFields();
+        });
+
+        // Handle login
+        async function handleLogin() {
+            githubToken = document.getElementById('githubToken').value.trim();
+            repoName = document.getElementById('repoName').value.trim();
+
+            if (!githubToken || !repoName) {
+                showMessage(loginStatus, 'Please enter both GitHub token and repository name', 'error');
+                return;
+            }
+
+            try {
+                // Test the connection by fetching a file
+                const response = await fetchFromGitHub('data/matches.json');
+                
+                if (response.ok) {
+                    // Load all data files
+                    await loadAllData();
+                    
+                    // Show admin dashboard
+                    loginSection.classList.add('hidden');
+                    adminDashboard.classList.remove('hidden');
+                    showMessage(loginStatus, 'Login successful!', 'success');
+                } else {
+                    const error = await response.json();
+                    showMessage(loginStatus, `Error: ${error.message || 'Failed to connect to GitHub'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(loginStatus, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Fetch data from GitHub
+        async function fetchFromGitHub(filePath) {
+            const url = `https://api.github.com/repos/${repoName}/contents/${filePath}`;
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            return response;
+        }
+
+        // Get file content from GitHub
+        async function getFileContent(filePath) {
+            const response = await fetchFromGitHub(filePath);
+            if (!response.ok) {
+                throw new Error('Failed to fetch file');
+            }
+            const data = await response.json();
+            return JSON.parse(atob(data.content));
+        }
+
+        // Update file on GitHub
+        async function updateFile(filePath, content, message) {
+            // First get the current SHA (needed for update)
+            const getResponse = await fetchFromGitHub(filePath);
+            let sha = '';
+            
+            if (getResponse.ok) {
+                const fileData = await getResponse.json();
+                sha = fileData.sha;
+            }
+
+            const url = `https://api.github.com/repos/${repoName}/contents/${filePath}`;
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${githubToken}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message || `Update ${filePath}`,
+                    content: btoa(JSON.stringify(content, null, 2)),
+                    sha: sha
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to update file');
+            }
+
+            return response.json();
+        }
+
+        // Load all data files
+        async function loadAllData() {
+            try {
+                [matchesData, teamsData, playersData, scoresData] = await Promise.all([
+                    getFileContent('data/matches.json'),
+                    getFileContent('data/teams.json'),
+                    getFileContent('data/players.json'),
+                    getFileContent('data/scores.json')
+                ]);
+
+                // Load players and bowlers
+                loadBattingPlayers();
+                loadBowlers();
+                loadOppositionPlayers();
+
+                // Set current innings
+                if (scoresData.innings && scoresData.innings["2"]) {
+                    document.getElementById('currentInnings').value = "2";
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                throw error;
+            }
+        }
+
+        // Load batting players based on selected team
+        function loadBattingPlayers() {
+            const teamId = battingTeamSelect.value;
+            const players = playersData[teamId] || [];
+            
+            battingPlayerSelect.innerHTML = '';
+            players.forEach(player => {
+                const option = document.createElement('option');
+                option.value = player.player_id;
+                option.textContent = `${player.first_name} ${player.last_name}`;
+                battingPlayerSelect.appendChild(option);
+            });
+        }
+
+        // Load bowlers based on selected team
+        function loadBowlers() {
+            const teamId = bowlingTeamSelect.value;
+            const players = playersData[teamId] || [];
+            
+            bowlerSelect.innerHTML = '';
+            players.forEach(player => {
+                if (player.bowling_style) { // Only include players with bowling style
+                    const option = document.createElement('option');
+                    option.value = player.player_id;
+                    option.textContent = `${player.first_name} ${player.last_name}`;
+                    bowlerSelect.appendChild(option);
+                }
+            });
+        }
+
+        // Load opposition players for dismissal info
+        function loadOppositionPlayers() {
+            const battingTeamId = battingTeamSelect.value;
+            const oppositionTeamId = battingTeamId === "1" ? "2" : "1";
+            const players = playersData[oppositionTeamId] || [];
+            
+            // Bowlers (for bowled by)
+            bowledBySelect.innerHTML = '';
+            players.forEach(player => {
+                if (player.bowling_style) {
+                    const option = document.createElement('option');
+                    option.value = player.player_id;
+                    option.textContent = `${player.first_name} ${player.last_name}`;
+                    bowledBySelect.appendChild(option);
+                }
+            });
+            
+            // Fielders (for caught by)
+            caughtBySelect.innerHTML = '';
+            players.forEach(player => {
+                const option = document.createElement('option');
+                option.value = player.player_id;
+                option.textContent = `${player.first_name} ${player.last_name}`;
+                caughtBySelect.appendChild(option);
+            });
+        }
+
+        // Toggle dismissal fields based on out/not out selection
+        function toggleDismissalFields() {
+            const isOut = isOutSelect.value === 'true';
+            
+            dismissalTypeContainer.style.display = isOut ? 'block' : 'none';
+            bowledByContainer.style.display = isOut ? 'block' : 'none';
+            caughtByContainer.style.display = isOut ? 'none' : 'none';
+            
+            // Show caught by only if dismissal type is caught
+            if (isOut && document.getElementById('dismissalType').value === 'caught') {
+                caughtByContainer.style.display = 'block';
+            }
+        }
+
+        // Update match status
+        async function updateMatchStatus() {
+            const statusMessage = document.getElementById('matchStatusMessage');
+            
+            try {
+                // In a real implementation, you would update the match status in matches.json
+                // For this example, we'll just show a success message
+                showMessage(statusMessage, 'Match status updated successfully!', 'success');
+            } catch (error) {
+                showMessage(statusMessage, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Update batting score
+        async function updateBattingScore() {
+            const statusMessage = document.getElementById('battingStatusMessage');
+            
+            try {
+                const playerId = parseInt(battingPlayerSelect.value);
+                const position = parseInt(document.getElementById('position').value);
+                const runs = parseInt(document.getElementById('runs').value);
+                const balls = parseInt(document.getElementById('balls').value);
+                const fours = parseInt(document.getElementById('fours').value);
+                const sixes = parseInt(document.getElementById('sixes').value);
+                const isOut = document.getElementById('isOut').value === 'true';
+                const dismissalType = isOut ? document.getElementById('dismissalType').value : null;
+                const bowledBy = isOut ? parseInt(document.getElementById('bowledBy').value) : null;
+                const caughtBy = (isOut && dismissalType === 'caught') ? parseInt(document.getElementById('caughtBy').value) : null;
+                
+                // Get current innings
+                const currentInnings = document.getElementById('currentInnings').value;
+                const battingTeamId = battingTeamSelect.value;
+                const bowlingTeamId = battingTeamId === "1" ? "2" : "1";
+                
+                // Prepare dismissal details
+                let dismissalDetails = 'not out';
+                if (isOut) {
+                    const bowler = playersData[bowlingTeamId].find(p => p.player_id === bowledBy);
+                    if (dismissalType === 'caught') {
+                        const fielder = playersData[bowlingTeamId].find(p => p.player_id === caughtBy);
+                        dismissalDetails = `c ${fielder.first_name} ${fielder.last_name} b ${bowler.first_name} ${bowler.last_name}`;
+                    } else {
+                        dismissalDetails = `b ${bowler.first_name} ${bowler.last_name}`;
+                    }
+                }
+                
+                // Update scores data
+                if (!scoresData.innings) scoresData.innings = {};
+                if (!scoresData.innings[currentInnings]) {
+                    scoresData.innings[currentInnings] = {
+                        batting_team: parseInt(battingTeamId),
+                        bowling_team: parseInt(bowlingTeamId),
+                        scores: [],
+                        bowling: []
+                    };
+                }
+                
+                // Find or create player score
+                let playerScore = scoresData.innings[currentInnings].scores.find(s => s.player_id === playerId);
+                if (!playerScore) {
+                    playerScore = {
+                        player_id: playerId,
+                        position: position,
+                        runs: runs,
+                        balls_faced: balls,
+                        fours: fours,
+                        sixes: sixes,
+                        is_out: isOut,
+                        dismissal_type: dismissalType,
+                        dismissal_status: dismissalDetails,
+                        bowled_by: bowledBy,
+                        caught_by: caughtBy
+                    };
+                    scoresData.innings[currentInnings].scores.push(playerScore);
+                } else {
+                    // Update existing score
+                    Object.assign(playerScore, {
+                        position: position,
+                        runs: runs,
+                        balls_faced: balls,
+                        fours: fours,
+                        sixes: sixes,
+                        is_out: isOut,
+                        dismissal_type: dismissalType,
+                        dismissal_status: dismissalDetails,
+                        bowled_by: bowledBy,
+                        caught_by: caughtBy
+                    });
+                }
+                
+                // Update totals
+                updateInningsTotals(currentInnings);
+                
+                // Save to GitHub
+                await updateFile('data/scores.json', scoresData, `Update batting score for player ${playerId}`);
+                
+                showMessage(statusMessage, 'Batting score updated successfully!', 'success');
+            } catch (error) {
+                showMessage(statusMessage, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Update bowling figures
+        async function updateBowlingFigures() {
+            const statusMessage = document.getElementById('bowlingStatusMessage');
+            
+            try {
+                const bowlerId = parseInt(bowlerSelect.value);
+                const bowlingOrder = parseInt(document.getElementById('bowlingOrder').value);
+                const overs = parseFloat(document.getElementById('overs').value);
+                const maidens = parseInt(document.getElementById('maidens').value);
+                const runsConceded = parseInt(document.getElementById('runsConceded').value);
+                const wickets = parseInt(document.getElementById('wickets').value);
+                const wides = parseInt(document.getElementById('wides').value);
+                const noBalls = parseInt(document.getElementById('noBalls').value);
+                const dots = parseInt(document.getElementById('dots').value);
+                
+                // Get current innings
+                const currentInnings = document.getElementById('currentInnings').value;
+                const bowlingTeamId = bowlingTeamSelect.value;
+                const battingTeamId = bowlingTeamId === "1" ? "2" : "1";
+                
+                // Update scores data
+                if (!scoresData.innings) scoresData.innings = {};
+                if (!scoresData.innings[currentInnings]) {
+                    scoresData.innings[currentInnings] = {
+                        batting_team: parseInt(battingTeamId),
+                        bowling_team: parseInt(bowlingTeamId),
+                        scores: [],
+                        bowling: []
+                    };
+                }
+                
+                // Find or create bowling figures
+                let bowlingFigures = scoresData.innings[currentInnings].bowling.find(b => b.player_id === bowlerId);
+                if (!bowlingFigures) {
+                    bowlingFigures = {
+                        player_id: bowlerId,
+                        bowling_order: bowlingOrder,
+                        overs: overs,
+                        maidens: maidens,
+                        runs_conceded: runsConceded,
+                        wickets: wickets,
+                        wides: wides,
+                        no_balls: noBalls,
+                        dots: dots
+                    };
+                    scoresData.innings[currentInnings].bowling.push(bowlingFigures);
+                } else {
+                    // Update existing figures
+                    Object.assign(bowlingFigures, {
+                        bowling_order: bowlingOrder,
+                        overs: overs,
+                        maidens: maidens,
+                        runs_conceded: runsConceded,
+                        wickets: wickets,
+                        wides: wides,
+                        no_balls: noBalls,
+                        dots: dots
+                    });
+                }
+                
+                // Update totals
+                updateInningsTotals(currentInnings);
+                
+                // Save to GitHub
+                await updateFile('data/scores.json', scoresData, `Update bowling figures for player ${bowlerId}`);
+                
+                showMessage(statusMessage, 'Bowling figures updated successfully!', 'success');
+            } catch (error) {
+                showMessage(statusMessage, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Update innings totals (runs, wickets, balls)
+        function updateInningsTotals(inningsKey) {
+            const innings = scoresData.innings[inningsKey];
+            if (!innings) return;
+            
+            // Batting totals
+            innings.total_runs = innings.scores.reduce((sum, score) => sum + score.runs, 0);
+            innings.total_wickets = innings.scores.filter(score => score.is_out).length;
+            innings.total_balls = innings.scores.reduce((sum, score) => sum + score.balls_faced, 0);
+            
+            // Bowling extras
+            innings.extras = innings.bowling.reduce((sum, bowler) => sum + (bowler.wides || 0) + (bowler.no_balls || 0), 0);
+        }
+
+        // Show status message
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `status-message ${type}`;
+            element.classList.remove('hidden');
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                element.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
